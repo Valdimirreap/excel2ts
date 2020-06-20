@@ -1,0 +1,30 @@
+{
+  "name": "excel2ts",
+  "version": "0.0.1",
+  "description": "The package template for getting started.",
+  "author": "Cocos Creator",
+  "main": "main.js",
+  "main-menu": {
+    "i18n:MAIN_MENU.package.title/excel2ts": {
+      "accelerator": "CmdOrCtrl+Shift+v",
+      "message": "excel2ts:open"
+    }
+  },
+  "panel": {
+    "main": "panel/index.js",
+    "type": "dockable",
+    "title": "excel2ts",
+    "width": 500,
+    "height": 700,
+    "min-height": 700,
+    "min-width": 500
+  },
+  "dependencies": {
+    "@brandless/tsbeautify": "0.0.8",
+    "chokidar": "^2.0.2",
+    "fs-extra": "^5.0.0",
+    "json-beautifully": "^1.0.3",
+    "node-xlsx": "^0.11.2",
+    "uglify-js": "^3.3.14"
+  }
+}
