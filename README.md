@@ -9,11 +9,13 @@
 
 如何使用:
 1.首先我们定义一个xlsx数据表格文件. 内容如下
+
 id	    name	   effect
 id	    名字	   效果
 number	string	 list<number>
 1	      牛肉丸	   0
 2	      大力丸	   4
+  
 他的前3行主要是描述内容,是一些必要字段.  第一行是转化为ts后的字段名字 ,第二行是介绍,也就是注释. 第三行是他的类型.
 目前只支持4种类型  number, string ,List<number>,List<string>
 
