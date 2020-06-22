@@ -239,8 +239,8 @@ Editor.Panel.extend({
                             let title = sheetData.data[0];  //
                             let desc = sheetData.data[1];  //注释  描述
                             let type = sheetData.data[2];  //类型,
-                            let name = sheetData.name;
-                            typeStr += `export interface ${name}Data extends Data{`
+                            let sheetName = sheetData.name.match(/[^<]*\w+(?=>)*/)[0];
+                            typeStr += `export interface ${sheetName}Data extends Data{`
                             for (let i = 0; i < type.length; i++) {
                                 let varName = title[i];
                                 let columDesc = desc[i];
@@ -379,17 +379,18 @@ Editor.Panel.extend({
                     let clazData = fs.readFileSync(dmUrl, { encoding: "utf-8" });
                     Object.getOwnPropertyNames(excelCache).forEach(key => {
                         excelCache[key].forEach(sheetData => {
-                            let name = sheetData.name;  //sheet 名
+                            //去掉sheetName中文部分
+                            let sheetName = sheetData.name.match(/[^<]*\w+(?=>)*/)[0];
                             //add datamanager
                             //添加import内容------------
 
                             // export let AIDatas: Array<AIData>;
                             // export let AIDatasById: { [key: number]: AIData };
-                            importContent += `import {${name}Data} from "./ConfigTypeDefind";\n`;
-                            defindContent += `export let ${name}DatasArray:Array<${name}Data>;\n`;
-                            defindContent += `export let ${name}DatasById:${name}Data[];\n`;
-                            funcContent += `${name}DatasArray=arrayData("${name}",datas);\n`;
-                            funcContent += `${name}DatasById=datas["${name}"];`;
+                            importContent += `import {${sheetName}Data} from "./ConfigTypeDefind";\n`;
+                            defindContent += `export let ${sheetName}DatasArray:Array<${sheetName}Data>;\n`;
+                            defindContent += `export let ${sheetName}DatasById:${sheetName}Data[];\n`;
+                            funcContent += `${sheetName}DatasArray=arrayData("${sheetName}",datas);\n`;
+                            funcContent += `${sheetName}DatasById=datas["${sheetName}"];`;
                             // AIDatas = datas["AI"];
                             // AIDatasById = getsById<AIData>(AIDatas);
                         });
@@ -408,6 +409,6 @@ Editor.Panel.extend({
     },
 
     messages: {
-        
+
     }
 });

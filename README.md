@@ -26,7 +26,7 @@ number	string	 list<number>
 
 后续计划:
 1. datas文件压缩选项.
-
+2. 表格枚举类型实现
 
 
 
