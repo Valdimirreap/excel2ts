@@ -320,13 +320,15 @@ Editor.Panel.extend({
                                 // let attrName=sheetData.data[0];
                                 //去掉中文部分  格式: 你好<hello>
                                 let cloumMap = {};
+                                //这里保存sheet字段得长度,因为后面可能出现因为空列而不计入列循环得情况,导致生成得数据直接没了字段
+                                let attrLength=sheetData.data[0].length;
                                 for (let i = 3; i < sheetData.data.length; i++) {
                                     let keyMap = {};
                                     //有可能出现id为空的情况(可能是完全的空行)
                                     if (!sheetData.data[i][0]) {
                                         continue;
                                     }
-                                    for (let j = 0; j < sheetData.data[i].length; j++) {
+                                    for (let j = 0; j < attrLength; j++) {
                                         let key = sheetData.data[0][j];
                                         let value = sheetData.data[i][j];
                                         if (value) {
