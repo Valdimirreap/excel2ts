@@ -331,7 +331,7 @@ Editor.Panel.extend({
                                     for (let j = 0; j < attrLength; j++) {
                                         let key = sheetData.data[0][j];
                                         let value = sheetData.data[i][j];
-                                        if (value) {
+                                        if (value!==undefined) {
                                             let typeArray = sheetData.data[2][j].toLowerCase().match(/[^<]\w+(?=>)/);
                                             if (typeArray) {
                                                 // number list
