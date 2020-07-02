@@ -236,6 +236,10 @@ Editor.Panel.extend({
                     let typeEnum = ["string", "number", "list<string>", "list<number>"];
                     Object.getOwnPropertyNames(excelCache).forEach(key => {
                         excelCache[key].forEach(sheetData => {
+                            if (sheetData.data.length < 4) {
+                                this._addLog(`表 ${key}--sheet ${sheetData.name} 行数小于3行,跳过`);
+                                return;
+                            }
                             let title = sheetData.data[0];  //
                             let desc = sheetData.data[1];  //注释  描述
                             let type = sheetData.data[2];  //类型,
@@ -321,7 +325,7 @@ Editor.Panel.extend({
                                 //去掉中文部分  格式: 你好<hello>
                                 let cloumMap = {};
                                 //这里保存sheet字段得长度,因为后面可能出现因为空列而不计入列循环得情况,导致生成得数据直接没了字段
-                                let attrLength=sheetData.data[0].length;
+                                let attrLength = sheetData.data[0].length;
                                 for (let i = 3; i < sheetData.data.length; i++) {
                                     let keyMap = {};
                                     //有可能出现id为空的情况(可能是完全的空行)
@@ -331,7 +335,7 @@ Editor.Panel.extend({
                                     for (let j = 0; j < attrLength; j++) {
                                         let key = sheetData.data[0][j];
                                         let value = sheetData.data[i][j];
-                                        if (value!==undefined) {
+                                        if (value !== undefined) {
                                             let typeArray = sheetData.data[2][j].toLowerCase().match(/[^<]\w+(?=>)/);
                                             if (typeArray) {
                                                 // number list
@@ -381,6 +385,12 @@ Editor.Panel.extend({
                     let clazData = fs.readFileSync(dmUrl, { encoding: "utf-8" });
                     Object.getOwnPropertyNames(excelCache).forEach(key => {
                         excelCache[key].forEach(sheetData => {
+                            if (sheetData.data.length < 4) {
+                                this._addLog(`表 ${key}--sheet ${sheetData.name} 行数小于3行,跳过`);
+                                return;
+                            }
+
+                            let idType = sheetData.data[2][0];  //id的类型
                             //去掉sheetName中文部分
                             let sheetName = sheetData.name.match(/[^<]*\w+(?=>)*/)[0];
                             //add datamanager
@@ -390,7 +400,7 @@ Editor.Panel.extend({
                             // export let AIDatasById: { [key: number]: AIData };
                             importContent += `import {${sheetName}Data} from "./ConfigTypeDefind";\n`;
                             defindContent += `export let ${sheetName}DatasArray:Array<${sheetName}Data>;\n`;
-                            defindContent += `export let ${sheetName}DatasById:${sheetName}Data[];\n`;
+                            defindContent += `export let ${sheetName}DatasById:{[key in ${idType}]:${sheetName}Data};\n`;
                             funcContent += `${sheetName}DatasArray=arrayData("${sheetName}",datas);\n`;
                             funcContent += `${sheetName}DatasById=datas["${sheetName}"];`;
                             // AIDatas = datas["AI"];
