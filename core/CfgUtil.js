@@ -4,7 +4,6 @@ let electron = require('electron');
 module.exports = {
     cfgData: {
         excelRootPath: null,// excel根路径
-
     },
     initCfg(cb) {
         let configFilePath = this._getAppCfgPath();
@@ -14,12 +13,13 @@ module.exports = {
             fs.readFile(configFilePath, 'utf-8', function (err, data) {
                 if (!err) {
                     let saveData = JSON.parse(data.toString());
-                    self.cfgData = saveData;
+                    this.cfgData = saveData;
+                    Editor.log(JSON.stringify(this.cfgData));
                     if (cb) {
                         cb(saveData);
                     }
                 }
-            }.bind(self));
+            }.bind(this));
         } else {
             if (cb) {
                 cb(null);
@@ -27,14 +27,16 @@ module.exports = {
         }
     },
     saveCfgByData(data) {
-        this.cfgData.excelRootPath = data.excelRootPath;
-        this.cfgData.configPath=data.configPath;
+        Object.keys(data).forEach(v => {
+            this.cfgData[v] = data[v];
+            Editor.log(v, data[v]);
+        });
         this._save();
     },
     _save() {
         let savePath = this._getAppCfgPath();
+        Editor.log(JSON.stringify(this.cfgData));
         fs.writeFileSync(savePath, JSON.stringify(this.cfgData));
-        console.log("save ok!");
     },
     _getAppCfgPath() {
         let userDataPath = null;

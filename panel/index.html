@@ -21,7 +21,10 @@
                 <ui-button class="blue" v-on:confirm="onBtnClickSelectExcelRootPath">选择目录</ui-button>
             </div>
         </ui-prop>
-
+        <div class="newRowCon" style="margin-top: 10px;">
+            <ui-checkbox :checked="isCompressJs" @confirm="onBtnIsCompressJsCheck" style="font-size: 15px;">将数据js压缩以节省体积</ui-checkbox>
+        </div>
+        <br/>
         <div class="layout vertical"
              style="width:100%;height: 200px;background-color: #888888;
          margin-left: 4px;margin-right: 4px;">

@@ -4,7 +4,6 @@ let path = require('fire-path');
 let CfgUtil = Editor.require('packages://' + packageName + '/core/CfgUtil.js');
 let nodeXlsx = Editor.require('packages://' + packageName + '/node_modules/node-xlsx');
 let Electron = require('electron');
-const { createCipher } = require('crypto');
 let uglifyJs = Editor.require('packages://' + packageName + '/node_modules/uglify-js');
 let fsExtra = Editor.require('packages://' + packageName + '/node_modules/fs-extra');
 let { TsBeautifier } = Editor.require('packages://' + packageName + '/node_modules/@brandless/tsbeautify');
@@ -36,6 +35,7 @@ Editor.Panel.extend({
                 logView: "",
                 excelRootPath: null,
                 configPath: null,
+                isCompressJs: false,  //是否将数据文件打包成json
                 excelArray: [],
                 excelFileArr: [],
             },
@@ -51,8 +51,6 @@ Editor.Panel.extend({
                 },
 
                 _watchDir(event, filePath) {
-                    console.log(event, filePath);
-                    this._addLog("开始检测文件夹");
                     let ext = path.extname(filePath);
                     if (ext === ".xlsx" || ext === ".xls") {
                         this._onAnalyzeExcelDirPath(this.excelRootPath);
@@ -64,7 +62,9 @@ Editor.Panel.extend({
                         if (data) {
                             this.excelRootPath = data.excelRootPath;
                             this.configPath = data.configPath || path.join(Editor.Project.path, "config");;
+                            this.isCompressJs = data.isCompressJs || false;
                             if (fs.existsSync(this.excelRootPath)) {
+                                this._addLog(`检测并监视文件夹-----${this.excelRootPath}`);
                                 chokidar.watch(this.excelRootPath).on('all', this._watchDir.bind(this));
                             }
                         }
@@ -88,8 +88,9 @@ Editor.Panel.extend({
                         let dir = res[0];
                         if (dir !== this.excelRootPath) {
                             this.excelRootPath = dir;
+                            this._addLog(`改动成功,检测并监视文件夹-----${this.excelRootPath}`);
                             chokidar.watch(this.excelRootPath).on('all', this._watchDir.bind(this));
-                            CfgUtil.saveCfgByData({ excelRootPath: this.excelRootPath, configPath: this.configPath });
+                            CfgUtil.saveCfgByData({ excelRootPath: this.excelRootPath });
                         }
                     }
                 },
@@ -103,9 +104,13 @@ Editor.Panel.extend({
                         let dir = res[0];
                         if (dir !== this.configPath) {
                             this.configPath = dir;
-                            CfgUtil.saveCfgByData({ excelRootPath: this.excelRootPath, configPath: this.configPath });
+                            CfgUtil.saveCfgByData({ configPath: this.configPath });
                         }
                     }
+                },
+                onBtnIsCompressJsCheck(event) {
+                    this.isCompressJs = event.detail.value;
+                    CfgUtil.saveCfgByData({ isCompressJs: this.isCompressJs });
                 },
                 // 查找出目录下的所有excel文件
                 _onAnalyzeExcelDirPath(dir) {
@@ -232,7 +237,7 @@ Editor.Panel.extend({
                  * 定义 ts接口类型
                  */
                 _saveTypeInter(excelCache) {
-                    let typeStr = "import Data from \"./Data\"";
+                    let typeStr = "";
                     let typeEnum = ["string", "number", "list<string>", "list<number>"];
                     Object.getOwnPropertyNames(excelCache).forEach(key => {
                         excelCache[key].forEach(sheetData => {
@@ -244,7 +249,7 @@ Editor.Panel.extend({
                             let desc = sheetData.data[1];  //注释  描述
                             let type = sheetData.data[2];  //类型,
                             let sheetName = sheetData.name.match(/[^<]*\w+(?=>)*/)[0];
-                            typeStr += `export interface ${sheetName}Data extends Data{`
+                            typeStr += `export interface ${sheetName}Data{`
                             for (let i = 0; i < type.length; i++) {
                                 let varName = title[i];
                                 let columDesc = desc[i];
@@ -252,18 +257,19 @@ Editor.Panel.extend({
                                 let lowType = columType.toLowerCase();
                                 if (typeEnum.includes(lowType)) {
                                     typeStr += `${varName}:`
+                                    columDesc = columDesc == undefined ? "\n" : "//" + columDesc + "\n";
                                     switch (lowType) {
                                         case "string":
-                                            typeStr += `string;   //${columDesc}\n`;
+                                            typeStr += `string;   ${columDesc}`;
                                             break;
                                         case "number":
-                                            typeStr += `number; //${columDesc}\n`;
+                                            typeStr += `number; ${columDesc}`;
                                             break;
                                         case "list<number>":
-                                            typeStr += `Array<number>; //${columDesc}\n`;
+                                            typeStr += `Array<number>; ${columDesc}`;
                                             break;
                                         case "list<string>":
-                                            typeStr += `Array<string>; //${columDesc}\n`;
+                                            typeStr += `Array<string>; ${columDesc}`;
                                             break;
                                     }
                                 } else {
@@ -309,13 +315,12 @@ Editor.Panel.extend({
                     this._saveTypeInter(excelCache);
                     //添加dataManager定义
                     this.addAsType(excelCache);
-                    //添加datas 数据
                     this.addMainDatas(excelCache);
                     // let saveStr = "export let  datas =  " +  JSON.stringify(jsSaveData) + ";";
                     this._addLog("全部转换完成!");
                 },
                 addMainDatas(excelCache) {
-                    let saveStr = "export let datas = ";
+                    let saveStr = "module.exports = ";
                     let jsSaveData = {};
                     Object.getOwnPropertyNames(excelCache).forEach(key => {
                         // 保存为ts
@@ -363,21 +368,85 @@ Editor.Panel.extend({
                             }
                         });
                     });
+                    let saveFileFullPath = path.join(this.configPath, "Datas.js");
                     saveStr += JSON.stringify(jsSaveData);
-                    let saveFileFullPath = path.join(this.configPath, "Datas.ts");
-                    let beautifier = new TsBeautifier();
-                    let result = beautifier.Beautify(saveStr);
-                    fs.writeFileSync(saveFileFullPath, result, "utf-8");
+                    let ret = uglifyJs.minify(uglifyJs.parse(saveStr), {
+                        output: {
+                            beautify: !this.isCompressJs,//如果希望得到格式化的输出，传入true
+                            indent_start: 0,//（仅当beautify为true时有效） - 初始缩进空格
+                            indent_level: 4,//（仅当beautify为true时有效） - 缩进级别，空格数量
+                        }
+                    });
+                    if (ret.error) {
+                        this._addLog('error: ' + ret.error.message);
+                    } else if (ret.code) {
+                        fs.writeFileSync(saveFileFullPath, ret.code, "utf-8");
+                        this._addLog("[JavaScript]" + saveFileFullPath);
+                    } else {
+
+                    }
+                },
+                addJson(excelCache) {
+                    let jsSaveData = {};
+                    Object.getOwnPropertyNames(excelCache).forEach(key => {
+                        // 保存为ts
+                        excelCache[key].forEach(sheetData => {
+                            if (sheetData.data.length > 3) {
+                                // let attrName=sheetData.data[0];
+                                //去掉中文部分  格式: 你好<hello>
+                                let cloumMap = {};
+                                //这里保存sheet字段得长度,因为后面可能出现因为空列而不计入列循环得情况,导致生成得数据直接没了字段
+                                let attrLength = sheetData.data[0].length;
+                                for (let i = 3; i < sheetData.data.length; i++) {
+                                    let keyMap = {};
+                                    //有可能出现id为空的情况(可能是完全的空行)
+                                    if (!sheetData.data[i][0]) {
+                                        continue;
+                                    }
+                                    for (let j = 0; j < attrLength; j++) {
+                                        let key = sheetData.data[0][j];
+                                        let value = sheetData.data[i][j];
+                                        if (value !== undefined) {
+                                            let typeArray = sheetData.data[2][j].toLowerCase().match(/[^<]\w+(?=>)/);
+                                            if (typeArray) {
+                                                // number list
+                                                value = (value + "").split(",");
+                                                if (typeArray[0] === "number") {
+                                                    value = value.reduce((pre, cur) => {
+                                                        pre.push(Number(cur));
+                                                        return pre;
+                                                    }, []);
+                                                }
+                                            }
+                                        } else {
+                                            value = null;
+                                        }
+                                        keyMap[key] = value;
+                                    }
+                                    //用id做键值
+                                    cloumMap[sheetData.data[i][0]] = keyMap;
+                                }
+                                //去掉sheetName中文部分
+                                let sheetName = sheetData.name.match(/[^<]*\w+(?=>)*/)[0];
+                                jsSaveData[sheetName] = cloumMap;
+                            } else {
+                                this._addLog("行数低于3行,无效sheet:" + sheetData.name);
+                            }
+                        });
+                    });
+                    ;
+                    let saveFileFullPath = path.join(this.configPath, "Datas.js");
+                    fs.writeFileSync(saveFileFullPath, JSON.stringify(jsSaveData), "utf-8");
                 },
                 addAsType(excelCache) {
                     //添加父类Data
-                    let interfaceUrl = Editor.url('packages://' + packageName + '//model//Data.ts', 'utf8');
-                    if (fs.existsSync(interfaceUrl)) {
-                        let data = fs.readFileSync(Editor.url('packages://' + packageName + '//model//Data.ts', 'utf8'));
-                        fs.writeFileSync(path.join(this.configPath, "Data.ts"), data);
-                    } else {
-                        Editor.error("Data.ts 模板不存在");
-                    }
+                    // let interfaceUrl = Editor.url('packages://' + packageName + '//model//Data.ts', 'utf8');
+                    // if (fs.existsSync(interfaceUrl)) {
+                    //     let data = fs.readFileSync(Editor.url('packages://' + packageName + '//model//Data.ts', 'utf8'));
+                    //     fs.writeFileSync(path.join(this.configPath, "Data.ts"), data);
+                    // } else {
+                    //     Editor.error("Data.ts 模板不存在");
+                    // }
                     let importContent = "";
                     let defindContent = "";
                     let funcContent = "";
@@ -401,8 +470,8 @@ Editor.Panel.extend({
                             importContent += `import {${sheetName}Data} from "./ConfigTypeDefind";\n`;
                             defindContent += `export let ${sheetName}DatasArray:Array<${sheetName}Data>;\n`;
                             defindContent += `export let ${sheetName}DatasById:{[key in ${idType}]:${sheetName}Data};\n`;
-                            funcContent += `${sheetName}DatasArray=arrayData("${sheetName}",datas);\n`;
-                            funcContent += `${sheetName}DatasById=datas["${sheetName}"];`;
+                            funcContent += `        ${sheetName}DatasArray=arrayData("${sheetName}",datas);\n`;
+                            funcContent += `        ${sheetName}DatasById=datas["${sheetName}"];\n`;
                             // AIDatas = datas["AI"];
                             // AIDatasById = getsById<AIData>(AIDatas);
                         });
@@ -410,8 +479,8 @@ Editor.Panel.extend({
                     clazData = clazData.replace("@@import", importContent);
                     clazData = clazData.replace("@@varDefined", defindContent);
                     clazData = clazData.replace("@@funcContent", funcContent);
-                    let beautifier = new TsBeautifier();
-                    let result = beautifier.Beautify(clazData);
+                    //  let beautifier = new TsBeautifier();
+                    let result = clazData; // beautifier.Beautify(clazData);
                     fs.writeFileSync(path.join(this.configPath, "DataManager.ts"), result);
                 }
             },

@@ -15,13 +15,5 @@ module.exports = {
       // open entry panel registered in package.json
       Editor.Panel.open('excel2ts');
     },
-    'say-hello' () {
-      Editor.log('Hello World!');
-      // send ipc message to panel
-      Editor.Ipc.sendToPanel('excel2ts', 'excel2ts:hello');
-    },
-    'clicked' () {
-      Editor.log('Button clicked!');
-    }
   },
 };

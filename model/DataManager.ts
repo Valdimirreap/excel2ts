@@ -1,6 +1,7 @@
 
-import Data from './Data';
-import { datas } from './Datas';
+
+declare let require: any;
+//import { datas } from './Datas';
 //Datas 不要手动修改4  import导入文件
 @@import
 //Datas 不要手动修改4
@@ -14,8 +15,8 @@ export namespace DataManager {
     //Datas 不要手动修改1
 
 
-    export function Init(datasOrJSONCode: string | {[key in string]:any}): void {
-        let datas: {[key in string]:any };
+    export function Init(datasOrJSONCode: string | { [key in string]: any }): void {
+        let datas: { [key in string]: any };
         if (typeof (datasOrJSONCode) == "string") {
             datas = JSON.parse(datasOrJSONCode);
         } else {
@@ -32,21 +33,22 @@ export namespace DataManager {
     }
 
     //数组化数据,使其可以使用下标访问
-    function arrayData<TData extends Data>(key:string,datas:  {[key in string]:Data }): TData[] {
+    function arrayData(key: string, datas: { [key in string]: any }) {
         let values = [];
-        let items=datas[key];
+        let items = datas[key];
         for (let key1 in items) {
             values.push(items[key1]);
         }
         return values;
     }
-    function getsById<TData extends Data>(datas: Array<TData>): { [key: number]: TData } {
-        let datasById: { [key: number]: TData } = {};
+    function getsById(datas: Array<any>): { [key: number]: any } {
+        let datasById: { [key: number]: any } = {};
         for (let data of datas) {
             datasById[data.ID] = data;
         }
         return datasById;
     }
 }
+let datas = require("datas");
 DataManager.Init(datas);
 
