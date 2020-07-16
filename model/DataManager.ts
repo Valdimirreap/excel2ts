@@ -3,6 +3,7 @@
 declare let require: any;
 //import { datas } from './Datas';
 //Datas 不要手动修改4  import导入文件
+import { datas } from "./Datas";
 @@import
 //Datas 不要手动修改4
 
@@ -15,7 +16,7 @@ export namespace DataManager {
     //Datas 不要手动修改1
 
 
-    export function Init(datasOrJSONCode: string | { [key in string]: any }): void {
+    export function init(datasOrJSONCode: string | { [key in string]: any }): void {
         let datas: { [key in string]: any };
         if (typeof (datasOrJSONCode) == "string") {
             datas = JSON.parse(datasOrJSONCode);
@@ -49,6 +50,4 @@ export namespace DataManager {
         return datasById;
     }
 }
-let datas = require("datas");
-DataManager.Init(datas);
-
+DataManager.init(datas);

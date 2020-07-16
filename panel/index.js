@@ -368,7 +368,7 @@ Editor.Panel.extend({
                             }
                         });
                     });
-                    let saveFileFullPath = path.join(this.configPath, "Datas.js");
+                    let saveFileFullPath = path.join(this.configPath, "Datas.ts");
                     saveStr += JSON.stringify(jsSaveData);
                     let ret = uglifyJs.minify(uglifyJs.parse(saveStr), {
                         output: {
@@ -380,63 +380,11 @@ Editor.Panel.extend({
                     if (ret.error) {
                         this._addLog('error: ' + ret.error.message);
                     } else if (ret.code) {
-                        fs.writeFileSync(saveFileFullPath, ret.code, "utf-8");
+                        fs.writeFileSync(saveFileFullPath, ret.code.replace("module.exports =", "export let datas="), "utf-8");
                         this._addLog("[JavaScript]" + saveFileFullPath);
                     } else {
 
                     }
-                },
-                addJson(excelCache) {
-                    let jsSaveData = {};
-                    Object.getOwnPropertyNames(excelCache).forEach(key => {
-                        // 保存为ts
-                        excelCache[key].forEach(sheetData => {
-                            if (sheetData.data.length > 3) {
-                                // let attrName=sheetData.data[0];
-                                //去掉中文部分  格式: 你好<hello>
-                                let cloumMap = {};
-                                //这里保存sheet字段得长度,因为后面可能出现因为空列而不计入列循环得情况,导致生成得数据直接没了字段
-                                let attrLength = sheetData.data[0].length;
-                                for (let i = 3; i < sheetData.data.length; i++) {
-                                    let keyMap = {};
-                                    //有可能出现id为空的情况(可能是完全的空行)
-                                    if (!sheetData.data[i][0]) {
-                                        continue;
-                                    }
-                                    for (let j = 0; j < attrLength; j++) {
-                                        let key = sheetData.data[0][j];
-                                        let value = sheetData.data[i][j];
-                                        if (value !== undefined) {
-                                            let typeArray = sheetData.data[2][j].toLowerCase().match(/[^<]\w+(?=>)/);
-                                            if (typeArray) {
-                                                // number list
-                                                value = (value + "").split(",");
-                                                if (typeArray[0] === "number") {
-                                                    value = value.reduce((pre, cur) => {
-                                                        pre.push(Number(cur));
-                                                        return pre;
-                                                    }, []);
-                                                }
-                                            }
-                                        } else {
-                                            value = null;
-                                        }
-                                        keyMap[key] = value;
-                                    }
-                                    //用id做键值
-                                    cloumMap[sheetData.data[i][0]] = keyMap;
-                                }
-                                //去掉sheetName中文部分
-                                let sheetName = sheetData.name.match(/[^<]*\w+(?=>)*/)[0];
-                                jsSaveData[sheetName] = cloumMap;
-                            } else {
-                                this._addLog("行数低于3行,无效sheet:" + sheetData.name);
-                            }
-                        });
-                    });
-                    ;
-                    let saveFileFullPath = path.join(this.configPath, "Datas.js");
-                    fs.writeFileSync(saveFileFullPath, JSON.stringify(jsSaveData), "utf-8");
                 },
                 addAsType(excelCache) {
                     //添加父类Data
