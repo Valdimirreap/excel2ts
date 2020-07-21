@@ -341,7 +341,8 @@ Editor.Panel.extend({
                                         let key = sheetData.data[0][j];
                                         let value = sheetData.data[i][j];
                                         if (value !== undefined) {
-                                            let typeArray = sheetData.data[2][j].toLowerCase().match(/[^<]\w+(?=>)/);
+                                            let type = sheetData.data[2][j].toLowerCase();
+                                            let typeArray = type.match(/[^<]\w+(?=>)/);
                                             if (typeArray) {
                                                 // number list
                                                 value = (value + "").split(",");
@@ -351,6 +352,12 @@ Editor.Panel.extend({
                                                         return pre;
                                                     }, []);
                                                 }
+                                            } else if (type === "number") {
+                                                value = Number(value);
+                                            } else if (type === "string") {
+                                                value = value + "";
+                                            } else {
+                                                this._addLog("[Error] 发现空单元格type:" + sheetData.name + ":" + type + " =>类型不符合枚举值 [string] [number] [list<string>] [list<number>]");
                                             }
                                         } else {
                                             value = null;
@@ -380,7 +387,7 @@ Editor.Panel.extend({
                     if (ret.error) {
                         this._addLog('error: ' + ret.error.message);
                     } else if (ret.code) {
-                        fs.writeFileSync(saveFileFullPath, ret.code.replace("module.exports =", "export let datas="), "utf-8");
+                        fs.writeFileSync(saveFileFullPath, ret.code.replace("module.exports", "export let datas"), "utf-8");
                         this._addLog("[JavaScript]" + saveFileFullPath);
                     } else {
 
