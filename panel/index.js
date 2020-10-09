@@ -200,7 +200,6 @@ Editor.Panel.extend({
                     let title = excelData[0];  //
                     let sheetFormatData = {};
                     let type = excelData[2];
-                    Editor.log("excelData.length=", excelData.length);
                     for (let i = 3; i < excelData.length; i++) {
                         let lineData = excelData[i];
                         let saveLineData = {};
@@ -320,7 +319,7 @@ Editor.Panel.extend({
                     this._addLog("全部转换完成!");
                 },
                 addMainDatas(excelCache) {
-                    let saveStr = "module.exports = ";
+                    let saveStr = "module.exports=";
                     let jsSaveData = {};
                     Object.getOwnPropertyNames(excelCache).forEach(key => {
                         // 保存为ts
@@ -375,7 +374,7 @@ Editor.Panel.extend({
                             }
                         });
                     });
-                    let saveFileFullPath = path.join(this.configPath, "Datas.ts");
+                    let saveFileFullPath = path.join(this.configPath, "Datas.js");
                     saveStr += JSON.stringify(jsSaveData);
                     let ret = uglifyJs.minify(uglifyJs.parse(saveStr), {
                         output: {
@@ -387,21 +386,12 @@ Editor.Panel.extend({
                     if (ret.error) {
                         this._addLog('error: ' + ret.error.message);
                     } else if (ret.code) {
-                        fs.writeFileSync(saveFileFullPath, ret.code.replace("module.exports", "export let datas"), "utf-8");
+                        fs.writeFile(saveFileFullPath, ret.code, "utf-8");
+                        Editor.assetdb.refresh('db://assets/');
                         this._addLog("[JavaScript]" + saveFileFullPath);
-                    } else {
-
-                    }
+                    } 
                 },
                 addAsType(excelCache) {
-                    //添加父类Data
-                    // let interfaceUrl = Editor.url('packages://' + packageName + '//model//Data.ts', 'utf8');
-                    // if (fs.existsSync(interfaceUrl)) {
-                    //     let data = fs.readFileSync(Editor.url('packages://' + packageName + '//model//Data.ts', 'utf8'));
-                    //     fs.writeFileSync(path.join(this.configPath, "Data.ts"), data);
-                    // } else {
-                    //     Editor.error("Data.ts 模板不存在");
-                    // }
                     let importContent = "";
                     let defindContent = "";
                     let funcContent = "";

@@ -1,29 +1,18 @@
-
-
 declare let require: any;
 //import { datas } from './Datas';
 //Datas 不要手动修改4  import导入文件
-import { datas } from "./Datas";
 @@import
 //Datas 不要手动修改4
 
 export namespace DataManager {
-
     //Datas 不要手动修改1 表变量定义
     // export let AIDatas: Array<AIData>;
     // export let AIDatasById: { [key: number]: AIData };
     @@varDefined
     //Datas 不要手动修改1
-
-
-    export function init(datasOrJSONCode: string | { [key in string]: any }): void {
-        let datas: { [key in string]: any };
-        if (typeof (datasOrJSONCode) == "string") {
-            datas = JSON.parse(datasOrJSONCode);
-        } else {
-            datas = datasOrJSONCode;
-        }
-
+    export function init(): void {
+        if(CC_EDITOR) return;
+        let datas=require("Datas.js");
         //Datas 不要手动修改2 变量的赋值
         //for example: 
         // AIDatas = datas["AI"];
@@ -50,4 +39,4 @@ export namespace DataManager {
         return datasById;
     }
 }
-DataManager.init(datas);
+DataManager.init();

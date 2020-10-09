@@ -1,6 +1,6 @@
 {
   "name": "excel2ts",
-  "version": "0.0.1",
+  "version": "1.1.1",
   "description": "The package template for getting started.",
   "author": "Cocos Creator",
   "main": "main.js",

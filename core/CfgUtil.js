@@ -14,7 +14,6 @@ module.exports = {
                 if (!err) {
                     let saveData = JSON.parse(data.toString());
                     this.cfgData = saveData;
-                    Editor.log(JSON.stringify(this.cfgData));
                     if (cb) {
                         cb(saveData);
                     }
@@ -29,13 +28,11 @@ module.exports = {
     saveCfgByData(data) {
         Object.keys(data).forEach(v => {
             this.cfgData[v] = data[v];
-            Editor.log(v, data[v]);
         });
         this._save();
     },
     _save() {
         let savePath = this._getAppCfgPath();
-        Editor.log(JSON.stringify(this.cfgData));
         fs.writeFileSync(savePath, JSON.stringify(this.cfgData));
     },
     _getAppCfgPath() {
