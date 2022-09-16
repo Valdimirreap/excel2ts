@@ -8,7 +8,7 @@
 1. 转换后的代码自带接口定义,支持ts语法提示,从此少掉几根头发.
 2. 使用简单容易上手.
 3. 随时更新
-如果你有任何建议或者需求,欢迎随时[联系作者QQ](http://wpa.qq.com/msgrd?v=3&uin=654088761&site=qq&menu=yes),或者提issue.
+如果你有任何建议或者需求,欢迎随时[联系作者QQ](http://wpa.qq.com/msgrd?v=3&uin=513342800&site=qq&menu=yes),或者提issue.
 
 ##如何使用:
 1. 首先我们定义一个xlsx数据表格文件. 内容如下
